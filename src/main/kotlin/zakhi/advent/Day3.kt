@@ -31,16 +31,21 @@ data class Claim(val id: Int, val left: Int, val top: Int, val width: Int, val h
 }
 
 
-private fun readClaims(): List<Claim> = withResourceStream("day 3 input.txt") {
-    it.bufferedReader().readLines().map { line ->
-        val match = Regex("""#(\d+) @ (\d+),(\d+): (\d+)x(\d+)""").matchEntire(line) ?: throw IllegalStateException("invalid input")
-        val (id, left, top, width, height) = match.groupValues.drop(1).map(String::toInt)
-        Claim(id, left, top, width, height)
+private val pattern = Regex("""#(\d+) @ (\d+),(\d+): (\d+)x(\d+)""")
+
+
+private fun readClaims(): List<Claim> {
+    return withResourceStream("day 3 input.txt") {
+        it.bufferedReader().readLines().map { line ->
+            val match = pattern.matchEntire(line) ?: throw IllegalStateException("invalid input")
+            val (id, left, top, width, height) = match.groupValues.drop(1).map(String::toInt)
+            Claim(id, left, top, width, height)
+        }
     }
 }
 
 
-fun findNonOverlapping(claims: List<Claim>, squareCoverCounts: Map<Pair<Int, Int>, Int>): String {
+private fun findNonOverlapping(claims: List<Claim>, squareCoverCounts: Map<Pair<Int, Int>, Int>): String {
     val nonOverlappingClaim = claims.find { claim ->
         claim.squaresCovered().all { coordinates -> squareCoverCounts[coordinates] == 1 }
     }
