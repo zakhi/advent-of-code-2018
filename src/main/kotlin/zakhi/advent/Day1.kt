@@ -1,11 +1,7 @@
-/*
- * Copyright (c) 2018, Omnisol Ltd. All rights reserved.
- * OMNISOL PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
- */
-
 package zakhi.advent
 
 import zakhi.advent.helpers.withResourceStream
+
 
 fun main() {
     val frequencyChanges = readFrequencyChanges()
