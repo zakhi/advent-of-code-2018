@@ -5,19 +5,19 @@ import java.util.*
 import kotlin.math.max
 
 
-class Unit(letter: Char) {
+class PolymerUnit(letter: Char) {
     val type = letter.toLowerCase()
     private val polarity = letter.isLowerCase()
 
-    fun reactsWith(other: Unit) = this.type == other.type && this.polarity != other.polarity
+    fun reactsWith(other: PolymerUnit) = this.type == other.type && this.polarity != other.polarity
 }
 
-typealias Polymer = LinkedList<Unit>
+typealias Polymer = LinkedList<PolymerUnit>
 
 fun main() {
     val letters = withResourceStream("day 5 input.txt") { it.bufferedReader().readText().trim() }
 
-    val polymer = Polymer(letters.map(::Unit)).react()
+    val polymer = Polymer(letters.map(::PolymerUnit)).react()
     val unitTypes = polymer.asSequence().distinctBy { it.type }
     val reducedPolymers = unitTypes.map { polymer.withoutUnit(it).react() }
 
@@ -43,4 +43,4 @@ private fun Polymer.react(): Polymer {
     return this
 }
 
-private fun Polymer.withoutUnit(unit: Unit) = Polymer(this).apply { removeIf { it.type == unit.type } }
+private fun Polymer.withoutUnit(unit: PolymerUnit) = Polymer(this).apply { removeIf { it.type == unit.type } }

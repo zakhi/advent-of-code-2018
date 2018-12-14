@@ -2,7 +2,6 @@ package zakhi.advent
 
 import zakhi.advent.helpers.withResourceStream
 import kotlin.math.absoluteValue
-import kotlin.streams.toList
 
 
 fun main() {
