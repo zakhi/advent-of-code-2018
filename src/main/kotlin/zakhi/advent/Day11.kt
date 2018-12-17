@@ -1,67 +1,56 @@
 package zakhi.advent
 
-import zakhi.advent.helpers.cartesianProduct
 
+const val SERIAL_NUMBER = 7315
+const val GRID_SIZE = 300
 
-const val serialNumber = 7315
 
 fun main() {
-    val grid = Matrix(300) { x, y ->
-        val rackId = 10 + x
-        val totalPowerLevel = (rackId * y + serialNumber) * rackId
-        (totalPowerLevel / 100) % 10
+    val matrix = Matrix()
+    matrixIndices().forEach { (x, y) -> matrix[x, y] = powerLevel(x, y) }
+
+    val sumMatrix = Matrix()
+    matrixIndices().forEach { (x, y) ->
+        sumMatrix[x, y] = matrix[x, y] + sumMatrix[x - 1, y] + sumMatrix[x, y - 1] - sumMatrix[x - 1, y - 1]
     }
 
-    val bestSquare = grid.subGrids(size = 3).maxBy { it.sum }!!
-    println("Part 1: ${bestSquare.topLeft.x},${bestSquare.topLeft.y}")
+    fun Square.sum(): Int {
+        val (x1, y1) = topLeft
+        val (x2, y2) = bottomRight
+        return sumMatrix[x2, y2] - sumMatrix[x1 - 1, y2] - sumMatrix[x2, y1 - 1] + sumMatrix[x1 - 1, y1 - 1]
+    }
+
+    val top3By3Square = squares(side = 3).maxBy { it.sum() }
+    println("Part 1: ${top3By3Square?.run { "$x,$y" }}")
+
+    val topSquare = (1..GRID_SIZE).asSequence().flatMap { side -> squares(side) }.maxBy { it.sum() }
+    println("Part 2: ${topSquare?.run { "$x,$y,$side" }}")
 }
 
+fun matrixIndices(side: Int = GRID_SIZE): Sequence<Pair<Int, Int>> =
+    (1..side).asSequence().flatMap { y -> (1..side).asSequence().map { x -> x to y } }
 
-data class GridCoordinates(val x: Int, val y: Int)
+fun squares(side: Int): Sequence<Square> = matrixIndices(GRID_SIZE - side + 1).map { (x, y) -> Square(x, y, side) }
 
-interface Grid {
-
-    val topLeft: GridCoordinates
-    val sum: Int
-
-    operator fun get(x: Int, y: Int): Int
+fun powerLevel(x: Int, y: Int): Int {
+    val rackId = 10 + x
+    val totalPowerLevel = (rackId * y + SERIAL_NUMBER) * rackId
+    return (totalPowerLevel / 100) % 10 - 5
 }
 
-class Matrix(private val side: Int, private val getValue: (Int, Int) -> Int) : Grid {
+class Matrix {
 
-    private val valueByCoordinates: Map<GridCoordinates, Int>
+    private val values = mutableMapOf<Pair<Int, Int>, Int>()
 
-    init {
-        val sideRange = 1..side
-        valueByCoordinates = (sideRange cartesianProduct sideRange).associate { (x, y) -> GridCoordinates(x, y) to getValue(x, y) }
+    operator fun get(x: Int, y: Int): Int = values[x to y] ?: 0
+
+    operator fun set(x: Int, y: Int, value: Int) {
+        require(x in 1..GRID_SIZE && y in 1..GRID_SIZE) { "($x, $y) out of bounds" }
+        values[x to y] = value
     }
+}
 
-    override val topLeft = GridCoordinates(1, 1)
-
-    override val sum: Int get() = valueByCoordinates.values.sum()
-
-    override operator fun get(x: Int, y: Int): Int = valueByCoordinates[GridCoordinates(x, y)] ?:
-        throw Exception("Invalid coordinates ($x, $y)")
-
-    fun subGrids(size: Int): Sequence<Grid> = sequence {
-        val squareSide = side - size + 1
-
-        for (x in 1..squareSide) {
-            for (y in 1..squareSide) {
-                yield(subGrid(x, y, size))
-            }
-        }
-    }
-
-    private fun subGrid(x: Int, y: Int, size: Int): Grid = object : Grid {
-        override val topLeft = GridCoordinates(x, y)
-
-        override val sum: Int
-            get() {
-                val side = 1..size
-                return (side cartesianProduct side).sumBy { (x, y) -> this[x, y] }
-            }
-
-        override fun get(x: Int, y: Int): Int = this@Matrix[topLeft.x + x - 1, topLeft.y + y - 1]
-    }
+data class Square(val x: Int, val y: Int, val side: Int) {
+    val topLeft get() = x to y
+    val bottomRight get() = (x + side - 1) to (y + side - 1)
 }
